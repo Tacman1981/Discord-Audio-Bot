@@ -1,4 +1,4 @@
-#Discord 24/7 Music & Radio Bot 🎧
+##Discord 24/7 Music & Radio Bot 🎧
 
 A production-grade, self-healing Discord music bot designed for 24/7 server voice channels. Features automatic silent channel joining, listener presence-triggered True Random radio playback, zero-privileged-intents operation, and drift-locked jitter-free audio streaming.
 
