@@ -1,4 +1,4 @@
-## Discord 24/7 Music & Radio Bot 🎧
+# Discord Music Bot 🎧
 
 A production-grade, self-healing Discord music bot designed for 24/7 server voice channels. Features automatic silent channel joining, listener presence-triggered True Random radio playback, zero-privileged-intents operation, and drift-locked jitter-free audio streaming.
 
@@ -13,7 +13,7 @@ A production-grade, self-healing Discord music bot designed for 24/7 server voic
 
 2. **Presence-Driven Playback**:
    - When a human joins the voice channel, the bot immediately starts streaming the server playlist in **True Random** (memoryless shuffle with replacement) mode.
-   - When the last human leaves, the bot stops playback after a 2-second grace period to save CPU and network bandwidth. It **never disconnects**—it waits silently for the next listener.
+   - When the last human leaves, the bot stops playback after a 2-second grace period to save CPU and network bandwidth. It waits silently for the next listener (or leaves if `LEAVE_ON_EMPTY=true`).
 
 3. **Self-Healing Watchdog**:
    - A 30-second background watchdog monitors voice connectivity. If Discord's voice servers drop or a network blip occurs, the bot reconnects automatically.
@@ -33,7 +33,7 @@ Follow these step-by-step instructions in the [Discord Developer Portal](https:/
 ### Step 1: Create the Discord Application
 1. Go to the [Discord Developer Portal](https://discord.com/developers/applications).
 2. Click the **"New Application"** button in the top right.
-3. Give your application a name (e.g. `DJ Bot`) and agree to the Developer Terms of Service.
+3. Give your application a name (e.g. `Discord Music Bot`) and agree to the Developer Terms of Service.
 4. *(Optional)* Under **General Information**, upload an avatar/icon and a description for your bot.
 
 ---
@@ -92,97 +92,85 @@ If the bot is ever invited to an unauthorized server, it logs the attempt and au
 
 ---
 
-## 🛠️ Linux Production Build & Deployment
+## 🛠️ Linux Installation & Deployment Guide
 
-The bot runs as a background service managed by `systemd` on Linux (Ubuntu / Debian).
+Follow these steps to set up the bot on any Linux machine (Ubuntu, Debian, Raspberry Pi OS, etc.):
 
-### 1. System Dependencies
-
+### Step 1: Install System Dependencies
+Update your system packages and install the audio and Python dependencies:
 ```bash
-# Update package lists
-sudo apt update
-
-# Install audio decoder, Opus codecs, and Node.js (for YouTube JS challenges)
-sudo apt install -y ffmpeg libopus0 libopus-dev nodejs python3 python3-pip python3-venv git curl
+sudo apt update && sudo apt install -y ffmpeg libopus0 libopus-dev nodejs python3 python3-pip python3-venv git curl
 ```
 
-### 2. Project Directory & Python Virtual Environment
-
+### Step 2: Clone & Set Up the Python Environment
 ```bash
-# Create directory
-mkdir -p /home/tacman/bot/DiscordBot
-cd /home/tacman/bot/DiscordBot
+# Clone your repository (or copy the project folder)
+git clone <your_repository_url>
 
-# Create and activate virtualenv
+# IMPORTANT: Always change directory (cd) into the bot's folder before continuing:
+cd <your_repository_directory>
+
+# Verify you are in the correct directory (should list bot.py, music.py, requirements.txt):
+ls -la
+
+# Create and activate a Python virtual environment
 python3 -m venv venv
 source venv/bin/activate
 
-# Install required Python packages
+# Install required Python libraries
 pip install --upgrade pip
-pip install discord.py yt-dlp python-dotenv
+pip install -r requirements.txt
 ```
 
-### 3. Environment Configuration (`.env`)
-
-Create or update your `.env` file:
-
+### Step 3: Configure Environment Variables
+Ensure you are inside the bot directory (`cd <your_repository_directory>`), then copy the template configuration file to `.env`:
+```bash
+cp .env.example .env
+```
+Open `.env` in your text editor (e.g. `nano .env`) and fill in your values:
 ```env
-# Discord Bot Token from Developer Portal
+# Paste your Discord Bot Token from Step 2 of the Discord Portal guide
 DISCORD_TOKEN=your_bot_token_here
 
-# Restrict bot commands to your server ID (leave blank to allow any server)
+# Restrict bot to your server ID (leave blank to allow any server)
 GUILD_ID=your_server_id_here
 
-# Designated voice channel ID to auto-join silently (leave blank to auto-detect by name)
+# Voice channel ID to auto-join silently on startup (leave blank to auto-detect by name)
 AUTO_JOIN_VOICE_CHANNEL_ID=your_voice_channel_id_here
+
+# Leave voice channel when empty (defaults to false: sits silently 24/7)
+LEAVE_ON_EMPTY=false
 ```
 
-### 4. Systemd Service Setup (`amg-bot.service`)
+### Step 4: Automated 24/7 Service & Daily Restart Setup
+To run the bot as a background service that:
+- Automatically starts on system boot (even when no user is logged in),
+- Automatically restarts if it ever crashes, and
+- Runs a scheduled daily restart at 04:00 AM to keep memory and audio sockets fresh,
 
-Create the systemd service file at `/etc/systemd/system/amg-bot.service`:
-
-```ini
-[Unit]
-Description=DJ Bot Discord Music Bot
-After=network.target
-
-[Service]
-Type=simple
-User=tacman
-WorkingDirectory=/home/tacman/bot/DiscordBot
-ExecStart=/home/tacman/bot/DiscordBot/venv/bin/python3 bot.py
-Restart=always
-RestartSec=5
-StandardOutput=journal
-StandardError=journal
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Enable and start the service:
+ensure your terminal is inside the bot folder, then run the installer:
 ```bash
-sudo systemctl daemon-reload
-sudo systemctl enable amg-bot
-sudo systemctl restart amg-bot
+# Make sure you are in the bot directory:
+cd <your_repository_directory>
+
+# Make executable and run:
+chmod +x setup_cron.sh
+sudo ./setup_cron.sh
 ```
 
-Monitor live logs:
+The script automatically detects your non-root user, project folder, and Python path, sets up the systemd service, and schedules the daily cron restart.
+
+### Step 5: Start & Manage the Service
 ```bash
-journalctl -u amg-bot -f
-```
+# Start the bot service
+sudo systemctl start amg-bot.service
 
----
+# View live status and song playback logs
+journalctl -u amg-bot.service -f
 
-## 🔄 Updating the Bot
-
-When updates are deployed to your web host (`https://homeonmypc.uk`):
-
-```bash
-cd /home/tacman/bot/DiscordBot && \
-curl -s -O https://homeonmypc.uk/bot.py && \
-curl -s -O https://homeonmypc.uk/music.py && \
-sudo systemctl restart amg-bot
+# Stop or restart manually
+sudo systemctl stop amg-bot.service
+sudo systemctl restart amg-bot.service
 ```
 
 ---
