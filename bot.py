@@ -79,6 +79,9 @@ ALLOWED_GUILD_IDS = [int(g.strip()) for g in raw_allowed_guilds.split(",") if g.
 raw_channel = os.getenv("AUTO_JOIN_VOICE_CHANNEL_ID", "").strip()
 AUTO_JOIN_VOICE_CHANNEL_ID = int(raw_channel) if raw_channel.isdigit() else None
 
+# Disconnect behavior when voice channel is empty (Defaults to False: stays in channel silently)
+LEAVE_ON_EMPTY = os.getenv("LEAVE_ON_EMPTY", "false").strip().lower() in ("true", "1", "yes")
+
 # Pure Slash Commands setup — requires ZERO privileged intents!
 intents = discord.Intents.default()
 
@@ -93,6 +96,7 @@ async def on_ready():
     print(f"  DJ Pete Bot is online! Logged in as: {bot.user}")
     print(f"  Guild count: {len(bot.guilds)}")
     print(f"  Slash Commands: Ready (Zero Privileged Intents)")
+    print(f"  Leave On Empty: {'Enabled (Disconnects)' if LEAVE_ON_EMPTY else 'Disabled (Sits Silently)'}")
     if ALLOWED_GUILD_IDS:
         print(f"  🔒 Server Whitelist: Active ({len(ALLOWED_GUILD_IDS)} allowed server(s))")
     else:
@@ -366,8 +370,13 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
             if voice_client.is_connected() and voice_client.channel == bot_channel:
                 remaining = count_human_listeners(bot_channel)
                 if remaining == 0:
-                    print(f"🔇 All listeners left '{bot_channel.name}'. Stopping playback and sitting silently.")
-                    player.stop()  # Stops audio and resets track, but KEEPS voice connection intact!
+                    if LEAVE_ON_EMPTY:
+                        print(f"👋 All listeners left '{bot_channel.name}'. Leaving voice channel (LEAVE_ON_EMPTY=True).")
+                        player.manual_leave = True
+                        await player.cleanup()
+                    else:
+                        print(f"🔇 All listeners left '{bot_channel.name}'. Stopping playback and sitting silently.")
+                        player.stop()  # Stops audio and resets track, but KEEPS voice connection intact!
 
 
 async def ensure_voice(ctx: commands.Context) -> bool:
