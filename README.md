@@ -1,4 +1,4 @@
-# DJ Pete - Discord 24/7 Music & Radio Bot 🎧
+Discord 24/7 Music & Radio Bot 🎧
 
 A production-grade, self-healing Discord music bot designed for 24/7 server voice channels. Features automatic silent channel joining, listener presence-triggered True Random radio playback, zero-privileged-intents operation, and drift-locked jitter-free audio streaming.
 
@@ -33,7 +33,7 @@ Follow these step-by-step instructions in the [Discord Developer Portal](https:/
 ### Step 1: Create the Discord Application
 1. Go to the [Discord Developer Portal](https://discord.com/developers/applications).
 2. Click the **"New Application"** button in the top right.
-3. Give your application a name (e.g. `DJ Pete`) and agree to the Developer Terms of Service.
+3. Give your application a name (e.g. `DJ Bot`) and agree to the Developer Terms of Service.
 4. *(Optional)* Under **General Information**, upload an avatar/icon and a description for your bot.
 
 ---
@@ -143,7 +143,7 @@ Create the systemd service file at `/etc/systemd/system/amg-bot.service`:
 
 ```ini
 [Unit]
-Description=DJ Pete Discord Music Bot
+Description=DJ Bot Discord Music Bot
 After=network.target
 
 [Service]
